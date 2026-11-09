@@ -807,7 +807,9 @@
             loadState();
             initChart();
             render();
-            lucide.createIcons();
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
             
             const today = new Date().toISOString().split('T')[0];
             document.querySelectorAll('input[type="date"]').forEach(inp => {
@@ -910,7 +912,9 @@
             renderReports(company);
             renderAIBenchmark(company);
 
-            lucide.createIcons();
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
         }
 
         function populateCompanySelector() {
@@ -974,9 +978,9 @@
             if (txs.length === 0) {
                 recentList.innerHTML = '<p class="text-xs text-slate-400 py-4 text-center">Nenhuma movimentação registrada.</p>';
             } else {
-                txs.forEach(t => {
+                    txs.forEach(t => {
                     const isInc = t.type === 'income';
-                    const div = document.createEelement('div');
+                    const div = document.createElement('div');
                     div.className = "flex items-center justify-between p-2.5 bg-slate-50 rounded-xl text-xs";
                     div.innerHTML = `
                         <div class="flex items-center gap-2.5">
