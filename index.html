@@ -1,0 +1,1710 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADM — Simulador de Gestão Empresarial</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            200: '#bfdbfe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                            950: '#0f172a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .azulejo {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border-radius: 1rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .azulejo:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+        }
+        .azulejo-primary {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+            color: #ffffff;
+            border-radius: 1rem;
+        }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; color: black; }
+            .azulejo { border: 1px solid #ccc; box-shadow: none; }
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800 flex flex-col md:flex-row overflow-x-hidden bg-slate-50">
+
+    <!-- OVERLAY BACKDROP FOR MOBILE MENU -->
+    <div id="sidebar-backdrop" onclick="closeSidebar()" class="fixed inset-0 bg-slate-900/60 z-40 hidden md:hidden transition-opacity"></div>
+
+    <!-- SIDEBAR DRAWER -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-brand-950 text-white transform -translate-x-full md:translate-x-0 md:static md:w-64 transition-transform duration-300 ease-in-out flex flex-col justify-between shadow-xl">
+        <div>
+            <!-- BRANDING -->
+            <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center font-bold text-xl text-white shadow-lg shadow-brand-500/30">
+                        ADM
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight tracking-wide text-white">ADM SIMULADOR</h1>
+                        <p class="text-xs text-brand-200">Gestão & Empreendedorismo</p>
+                    </div>
+                </div>
+                <button onclick="closeSidebar()" class="md:hidden text-slate-400 hover:text-white p-1">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <!-- NAVIGATION ITEMS -->
+            <nav class="p-3 space-y-1 text-sm font-medium">
+                <button onclick="nav('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-slate-300 hover:bg-brand-900 hover:text-white bg-brand-900 font-semibold">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 text-brand-500"></i> Visão Geral
+                </button>
+                <button onclick="nav('companies')" id="nav-companies" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-slate-300 hover:bg-brand-900 hover:text-white">
+                    <i data-lucide="building-2" class="w-5 h-5 text-brand-500"></i> Empresas
+                </button>
+                <button onclick="nav('market')" id="nav-market" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-slate-300 hover:bg-brand-900 hover:text-white">
+                    <i data-lucide="store" class="w-5 h-5 text-amber-400"></i> Mercado & Compras
+                </button>
+                <button onclick="nav('incomes')" id="nav-incomes" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-slate-300 hover:bg-brand-900 hover:text-white">
+                    <i data-lucide="arrow-up-right" class="w-5 h-5 text-emerald-400"></i> Receitas
+                </button>
+                <button onclick="nav('expenses')" id="nav-expenses" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-slate-300 hover:bg-brand-900 hover:text-white">
+                    <i data-lucide="arrow-down-left" class="w-5 h-5 text-rose-400"></i> Despesas
+                </button>
+                <button onclick="nav('investments')" id="nav-investments" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-slate-300 hover:bg-brand-900 hover:text-white">
+                    <i data-lucide="trending-up" class="w-5 h-5 text-amber-400"></i> Investimentos & Lucro
+                </button>
+                <button onclick="nav('payables')" id="nav-payables" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-slate-300 hover:bg-brand-900 hover:text-white">
+                    <i data-lucide="receipt" class="w-5 h-5 text-brand-500"></i> Contas a Pagar / Receber
+                </button>
+                <button onclick="nav('loans')" id="nav-loans" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-slate-300 hover:bg-brand-900 hover:text-white">
+                    <i data-lucide="landmark" class="w-5 h-5 text-brand-500"></i> Empréstimos
+                </button>
+                <button onclick="nav('equity')" id="nav-equity" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-slate-300 hover:bg-brand-900 hover:text-white">
+                    <i data-lucide="pie-chart" class="w-5 h-5 text-brand-500"></i> Patrimônio
+                </button>
+                <button onclick="nav('reports')" id="nav-reports" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition text-slate-300 hover:bg-brand-900 hover:text-white">
+                    <i data-lucide="file-spreadsheet" class="w-5 h-5 text-brand-500"></i> Relatórios (DRE)
+                </button>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-slate-800 space-y-3">
+            <button onclick="resetData()" class="w-full flex items-center justify-center gap-2 px-3 py-2 text-xs font-semibold text-rose-400 hover:bg-rose-950/40 rounded-lg border border-rose-900/50 transition">
+                <i data-lucide="rotate-ccw" class="w-4 h-4"></i> Resetar Simulação
+            </button>
+            <div class="text-center text-[10px] text-slate-500">
+                ADM v2.6 • Módulo Mercado
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN WRAPPER -->
+    <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        
+        <!-- TOP HEADER NAVBAR -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 px-4 py-3 flex items-center justify-between gap-4 no-print shadow-sm">
+            <div class="flex items-center gap-3">
+                <button onclick="openSidebar()" class="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <div>
+                    <h2 id="page-title" class="text-lg font-bold text-slate-900 leading-tight">Visão Geral</h2>
+                    <p id="page-subtitle" class="text-xs text-slate-500 hidden sm:block">Painel principal da empresa</p>
+                </div>
+            </div>
+
+            <!-- CONTROLS: PERFIL & EMPRESA SELEÇÃO -->
+            <div class="flex items-center gap-2 sm:gap-3">
+                <div class="bg-slate-100 p-1 rounded-xl flex border border-slate-200">
+                    <button onclick="setRole('company')" id="btn-role-company" class="px-2 sm:px-3 py-1 rounded-lg text-xs font-semibold transition bg-white text-brand-700 shadow-sm">
+                        Admin Empresa
+                    </button>
+                    <button onclick="setRole('general')" id="btn-role-general" class="px-2 sm:px-3 py-1 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900">
+                        Admin Geral
+                    </button>
+                </div>
+
+                <div class="relative min-w-[140px] sm:min-w-[180px]">
+                    <select id="company-selector" onchange="changeActiveCompany(this.value)" class="w-full pl-3 pr-8 py-1.5 text-xs font-medium bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none text-slate-800">
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+
+            <!-- ALERT BENCHMARK / IA BANNER -->
+            <div id="ai-insight-banner" class="azulejo p-4 sm:p-5 flex items-start gap-4 border-l-4 border-brand-600">
+                <div class="p-2.5 bg-brand-50 text-brand-600 rounded-xl flex-shrink-0">
+                    <i data-lucide="sparkles" class="w-6 h-6"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h4 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        Diagnóstico Financeiro
+                        <span id="insight-badge" class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Saudável</span>
+                    </h4>
+                    <p id="insight-text" class="text-xs sm:text-sm text-slate-600 mt-1">Carregando análise...</p>
+                </div>
+            </div>
+
+            <!-- SEÇÃO 1: DASHBOARD -->
+            <section id="sec-dashboard" class="space-y-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+                    <div class="azulejo-primary p-5 flex flex-col justify-between relative overflow-hidden shadow-md">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs uppercase tracking-wider text-brand-100 font-semibold">Saldo Atual</span>
+                                <h3 id="dash-balance" class="text-2xl sm:text-3xl font-extrabold mt-1">R$ 0,00</h3>
+                            </div>
+                            <div class="p-2 bg-white/10 rounded-xl backdrop-blur-md">
+                                <i data-lucide="wallet" class="w-6 h-6 text-white"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-white/10 flex justify-between items-center text-xs text-brand-100">
+                            <span>Capital Inicial</span>
+                            <span id="dash-initial-capital" class="font-bold">R$ 0,00</span>
+                        </div>
+                    </div>
+
+                    <div class="azulejo p-5 flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Receitas</span>
+                                <h3 id="dash-incomes" class="text-2xl sm:text-3xl font-bold mt-1 text-emerald-600">R$ 0,00</h3>
+                            </div>
+                            <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                                <i data-lucide="trending-up" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-4">Total acumulado de entradas</p>
+                    </div>
+
+                    <div class="azulejo p-5 flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Despesas</span>
+                                <h3 id="dash-expenses" class="text-2xl sm:text-3xl font-bold mt-1 text-rose-600">R$ 0,00</h3>
+                            </div>
+                            <div class="p-2.5 bg-rose-50 text-rose-600 rounded-xl">
+                                <i data-lucide="trending-down" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-4">Total acumulado de saídas</p>
+                    </div>
+
+                    <div class="azulejo p-5 flex flex-col justify-between">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-xs uppercase tracking-wider text-slate-500 font-semibold">Saldo Devedor Empréstimos</span>
+                                <h3 id="dash-loans-due" class="text-2xl sm:text-3xl font-bold mt-1 text-amber-600">R$ 0,00</h3>
+                            </div>
+                            <div class="p-2.5 bg-amber-50 text-amber-600 rounded-xl">
+                                <i data-lucide="landmark" class="w-6 h-6"></i>
+                            </div>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-4">Passivos bancários em aberto</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="azulejo p-5 lg:col-span-2">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-slate-900 text-base">Fluxo de Entradas vs Saídas</h3>
+                            <span class="text-xs text-slate-400">Comparativo Operacional</span>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="financeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="azulejo p-5 flex flex-col">
+                        <h3 class="font-bold text-slate-900 text-base mb-3">Últimas Movimentações</h3>
+                        <div id="dash-recent-list" class="flex-1 space-y-3 overflow-y-auto max-h-64 pr-1">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 2: EMPRESAS -->
+            <section id="sec-companies" class="space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Empresas Cadastradas</h3>
+                        <p class="text-xs text-slate-500">Gerencie e cadastre empresas no simulador</p>
+                    </div>
+                    <button onclick="toggleCompanyModal(true)" class="w-full sm:w-auto px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md transition">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i> Cadastrar Nova Empresa
+                    </button>
+                </div>
+                <div id="companies-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+            </section>
+
+            <!-- SEÇÃO 3: MERCADO & COMPRAS -->
+            <section id="sec-market" class="space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Mercado de Fornecedores & Ativos</h3>
+                        <p class="text-xs text-slate-500">Compre equipamentos, tintas, utilidades e mercadorias para sua empresa</p>
+                    </div>
+                    <div class="flex items-center gap-2 bg-white p-1 rounded-xl border border-slate-200">
+                        <button onclick="filterMarket('all')" id="filter-market-all" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand-600 text-white transition">Todos</button>
+                        <button onclick="filterMarket('Equipamentos')" id="filter-market-Equipamentos" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 transition">Equipamentos</button>
+                        <button onclick="filterMarket('Estrutura')" id="filter-market-Estrutura" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 transition">Estrutura</button>
+                        <button onclick="filterMarket('Mercadorias')" id="filter-market-Mercadorias" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 transition">Mercadorias</button>
+                    </div>
+                </div>
+
+                <div id="market-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+            </section>
+
+            <!-- SEÇÃO 4: RECEITAS -->
+            <section id="sec-incomes" class="space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Gestão de Receitas</h3>
+                        <p class="text-xs text-slate-500">Registre todas as vendas, serviços prestados e entradas</p>
+                    </div>
+                    <button onclick="toggleIncomeModal(true)" class="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Nova Receita
+                    </button>
+                </div>
+                <div class="azulejo overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs sm:text-sm">
+                            <thead class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3 sm:p-4">Descrição</th>
+                                    <th class="p-3 sm:p-4">Categoria</th>
+                                    <th class="p-3 sm:p-4">Data</th>
+                                    <th class="p-3 sm:p-4">Valor</th>
+                                    <th class="p-3 sm:p-4">Status</th>
+                                    <th class="p-3 sm:p-4 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="incomes-table-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 5: DESPESAS -->
+            <section id="sec-expenses" class="space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Gestão de Despesas</h3>
+                        <p class="text-xs text-slate-500">Controle de saídas, fornecedores, salários e contas operacionais</p>
+                    </div>
+                    <button onclick="toggleExpenseModal(true)" class="w-full sm:w-auto px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i> Nova Despesa
+                    </button>
+                </div>
+                <div class="azulejo overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs sm:text-sm">
+                            <thead class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
+                                <tr>
+                                    <th class="p-3 sm:p-4">Descrição</th>
+                                    <th class="p-3 sm:p-4">Categoria</th>
+                                    <th class="p-3 sm:p-4">Vencimento</th>
+                                    <th class="p-3 sm:p-4">Valor</th>
+                                    <th class="p-3 sm:p-4">Status</th>
+                                    <th class="p-3 sm:p-4 text-right">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expenses-table-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 6: INVESTIMENTOS & LUCRO -->
+            <section id="sec-investments" class="space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Projetos de Investimento & Retorno</h3>
+                        <p class="text-xs text-slate-500">Aporte capital em qualquer valor, projete custos associados e acompanhe o lucro líquido</p>
+                    </div>
+                    <button onclick="toggleInvestmentModal(true)" class="w-full sm:w-auto px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md transition">
+                        <i data-lucide="trending-up" class="w-4 h-4"></i> Novo Investimento
+                    </button>
+                </div>
+
+                <div id="investments-container" class="grid grid-cols-1 lg:grid-cols-2 gap-5"></div>
+            </section>
+
+            <!-- SEÇÃO 7: CONTAS A PAGAR / RECEBER -->
+            <section id="sec-payables" class="space-y-6 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="azulejo p-5 space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                            <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                                <i data-lucide="arrow-down-left" class="w-5 h-5 text-emerald-600"></i> Contas a Receber
+                            </h3>
+                            <span id="total-receivables" class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg">R$ 0,00</span>
+                        </div>
+                        <div id="receivables-list" class="space-y-3 max-h-80 overflow-y-auto pr-1"></div>
+                    </div>
+
+                    <div class="azulejo p-5 space-y-4">
+                        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                            <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                                <i data-lucide="arrow-up-right" class="w-5 h-5 text-rose-600"></i> Contas a Pagar
+                            </h3>
+                            <span id="total-payables" class="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-lg">R$ 0,00</span>
+                        </div>
+                        <div id="payables-list" class="space-y-3 max-h-80 overflow-y-auto pr-1"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 8: EMPRÉSTIMOS -->
+            <section id="sec-loans" class="space-y-6 hidden">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Empréstimos & Financiamentos</h3>
+                        <p class="text-xs text-slate-500">Solicite e administre empréstimos simulados com regras bancárias reais</p>
+                    </div>
+                    <button onclick="toggleLoanModal(true)" class="w-full sm:w-auto px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md transition">
+                        <i data-lucide="landmark" class="w-4 h-4"></i> Simular/Solicitar Empréstimo
+                    </button>
+                </div>
+                <div id="loans-container" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+            </section>
+
+            <!-- SEÇÃO 9: PATRIMÔNIO -->
+            <section id="sec-equity" class="space-y-6 hidden">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-900">Balanço Patrimonial</h3>
+                    <p class="text-xs text-slate-500">Demonstração de bens (Ativos), obrigações (Passivos) e Patrimônio Líquido</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="azulejo p-5 space-y-4">
+                        <h4 class="font-bold text-slate-900 text-base border-b border-slate-100 pb-2 text-brand-700 flex justify-between">
+                            <span>ATIVOS (Bens e Direitos)</span>
+                            <span id="bp-total-assets">R$ 0,00</span>
+                        </h4>
+                        <div class="space-y-3 text-xs sm:text-sm">
+                            <div class="font-semibold text-slate-700">Ativo Circulante</div>
+                            <div class="flex justify-between pl-3 text-slate-600">
+                                <span>Caixa / Saldo em Conta</span>
+                                <span id="bp-cash" class="font-medium">R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between pl-3 text-slate-600">
+                                <span>Contas a Receber</span>
+                                <span id="bp-receivables" class="font-medium">R$ 0,00</span>
+                            </div>
+                            <div class="font-semibold text-slate-700 pt-2">Ativo Não Circulante</div>
+                            <div class="flex justify-between pl-3 text-slate-600">
+                                <span>Imobilizado & Máquinas (Estimado)</span>
+                                <span id="bp-fixed-assets" class="font-medium">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="azulejo p-5 space-y-4">
+                        <h4 class="font-bold text-slate-900 text-base border-b border-slate-100 pb-2 text-brand-700 flex justify-between">
+                            <span>PASSIVOS & PATRIMÔNIO LÍQUIDO</span>
+                            <span id="bp-total-liabilities-equity">R$ 0,00</span>
+                        </h4>
+                        <div class="space-y-3 text-xs sm:text-sm">
+                            <div class="font-semibold text-slate-700">Passivo Circulante</div>
+                            <div class="flex justify-between pl-3 text-slate-600">
+                                <span>Contas a Pagar</span>
+                                <span id="bp-payables" class="font-medium">R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between pl-3 text-slate-600">
+                                <span>Empréstimos Bancários</span>
+                                <span id="bp-loans" class="font-medium">R$ 0,00</span>
+                            </div>
+                            <div class="font-semibold text-slate-700 pt-2 border-t border-slate-100">Patrimônio Líquido</div>
+                            <div class="flex justify-between pl-3 text-slate-600">
+                                <span>Capital Social Integralizado</span>
+                                <span id="bp-capital" class="font-medium">R$ 0,00</span>
+                            </div>
+                            <div class="flex justify-between pl-3 text-slate-600">
+                                <span>Lucros / Prejuízos Acumulados</span>
+                                <span id="bp-retained-earnings" class="font-medium">R$ 0,00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO 10: RELATÓRIOS (DRE) -->
+            <section id="sec-reports" class="space-y-6 hidden">
+                <div class="flex justify-between items-center no-print">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900">Demonstrativo do Resultado do Exercício (DRE)</h3>
+                        <p class="text-xs text-slate-500">Relatório de desempenho financeiro acumulado</p>
+                    </div>
+                    <button onclick="window.print()" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-brand-700 transition">
+                        <i data-lucide="printer" class="w-4 h-4"></i> Imprimir DRE
+                    </button>
+                </div>
+                <div class="azulejo p-6 sm:p-8 space-y-4 max-w-3xl mx-auto">
+                    <div class="border-b border-slate-200 pb-4 text-center">
+                        <h2 id="dre-company-name" class="text-xl font-bold text-slate-900">NOME DA EMPRESA</h2>
+                        <p class="text-xs text-slate-500">Relatório Financeiro Operacional • DRE</p>
+                    </div>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between font-bold text-slate-800 border-b pb-1">
+                            <span>(+) Receita Bruta de Vendas / Serviços</span>
+                            <span id="dre-gross-revenue" class="text-emerald-600">R$ 0,00</span>
+                        </div>
+                        <div class="flex justify-between text-slate-600 pl-4 border-b border-dashed pb-1">
+                            <span>(-) Custos Operacionais e Despesas Diretas</span>
+                            <span id="dre-operating-expenses" class="text-rose-600">R$ 0,00</span>
+                        </div>
+                        <div class="flex justify-between font-extrabold text-base text-slate-900 bg-slate-100 p-2 rounded-lg">
+                            <span>(=) Resultado Operacional (Lucro / Prejuízo)</span>
+                            <span id="dre-operating-result">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- MODAL DE COMPRA NO MERCADO -->
+    <div id="modal-buy-market" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="azulejo w-full max-w-md p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 id="market-modal-title" class="font-bold text-slate-900 text-base">Comprar Produto</h3>
+                <button onclick="toggleMarketModal(false)" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-buy-market" onsubmit="handleConfirmMarketBuy(event)" class="space-y-3 text-xs sm:text-sm">
+                <input type="hidden" id="buy-prod-id">
+                <div>
+                    <span class="text-xs text-slate-500 block">Preço à Vista:</span>
+                    <span id="buy-prod-price-view" class="text-lg font-bold text-brand-700">R$ 0,00</span>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Forma de Pagamento</label>
+                    <select id="buy-payment-mode" onchange="onPaymentModeChange(this.value)" class="w-full p-2.5 border border-slate-300 rounded-xl">
+                        <option value="cash">À Vista (Debitar Caixa)</option>
+                        <option value="installments">Financiado (Parcelas Mensais)</option>
+                    </select>
+                </div>
+                <div id="installments-box" class="hidden space-y-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Número de Parcelas</label>
+                        <input type="number" id="buy-installments-count" value="3" min="1" max="24" class="w-full p-2.5 border border-slate-300 rounded-xl">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Data da Compra / 1º Vencimento</label>
+                    <input type="date" id="buy-date" required class="w-full p-2.5 border border-slate-300 rounded-xl">
+                </div>
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="toggleMarketModal(false)" class="w-1/2 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-600">Cancelar</button>
+                    <button type="submit" class="w-1/2 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-md">Confirmar Aquisição</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- OUTROS MODAIS -->
+    <div id="modal-company" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="azulejo w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-base">Nova Empresa Fictícia</h3>
+                <button onclick="toggleCompanyModal(false)" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-company" onsubmit="handleSaveCompany(event)" class="space-y-3 text-xs sm:text-sm">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nome Empresarial</label>
+                    <input type="text" id="comp-name" required placeholder="Ex: Tech Solutions LTDA" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Ramo de Atividade</label>
+                    <input type="text" id="comp-segment" required placeholder="Ex: Tecnologia, Comércio, Serviços" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Capital Inicial (R$)</label>
+                    <input type="number" step="0.01" id="comp-capital" required placeholder="10000.00" class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-brand-500">
+                </div>
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="toggleCompanyModal(false)" class="w-1/2 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-600 hover:bg-slate-50">Cancelar</button>
+                    <button type="submit" class="w-1/2 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-md">Salvar Empresa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-income" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="azulejo w-full max-w-md p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-base">Lançar Nova Receita</h3>
+                <button onclick="toggleIncomeModal(false)" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-income" onsubmit="handleSaveIncome(event)" class="space-y-3 text-xs sm:text-sm">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Descrição</label>
+                    <input type="text" id="inc-desc" required placeholder="Ex: Venda de produtos #102" class="w-full p-2.5 border border-slate-300 rounded-xl">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Valor (R$)</label>
+                        <input type="number" step="0.01" id="inc-amount" required placeholder="500.00" class="w-full p-2.5 border border-slate-300 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Categoria</label>
+                        <select id="inc-category" class="w-full p-2.5 border border-slate-300 rounded-xl">
+                            <option value="Vendas">Vendas</option>
+                            <option value="Serviços">Serviços</option>
+                            <option value="Investimentos">Investimentos</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Data</label>
+                        <input type="date" id="inc-date" required class="w-full p-2.5 border border-slate-300 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Status</label>
+                        <select id="inc-status" class="w-full p-2.5 border border-slate-300 rounded-xl">
+                            <option value="received">Recebido (Caixa)</option>
+                            <option value="pending">Pendente (A Receber)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="toggleIncomeModal(false)" class="w-1/2 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-600">Cancelar</button>
+                    <button type="submit" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md">Confirmar Entrada</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-expense" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="azulejo w-full max-w-md p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-base">Lançar Nova Despesa</h3>
+                <button onclick="toggleExpenseModal(false)" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-expense" onsubmit="handleSaveExpense(event)" class="space-y-3 text-xs sm:text-sm">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Descrição</label>
+                    <input type="text" id="exp-desc" required placeholder="Ex: Pagamento de Fornecedor" class="w-full p-2.5 border border-slate-300 rounded-xl">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Valor (R$)</label>
+                        <input type="number" step="0.01" id="exp-amount" required placeholder="250.00" class="w-full p-2.5 border border-slate-300 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Categoria</label>
+                        <select id="exp-category" class="w-full p-2.5 border border-slate-300 rounded-xl">
+                            <option value="Aluguel">Aluguel</option>
+                            <option value="Salários">Salários</option>
+                            <option value="Fornecedores">Fornecedores</option>
+                            <option value="Energia/Água">Energia/Água</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Vencimento</label>
+                        <input type="date" id="exp-date" required class="w-full p-2.5 border border-slate-300 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Status</label>
+                        <select id="exp-status" class="w-full p-2.5 border border-slate-300 rounded-xl">
+                            <option value="paid">Pago (Debitar Caixa)</option>
+                            <option value="pending">Pendente (A Pagar)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="toggleExpenseModal(false)" class="w-1/2 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-600">Cancelar</button>
+                    <button type="submit" class="w-1/2 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-md">Confirmar Despesa</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE INVESTIMENTO -->
+    <div id="modal-investment" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="azulejo w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-base">Novo Projeto de Investimento</h3>
+                <button onclick="toggleInvestmentModal(false)" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-investment" onsubmit="handleSaveInvestment(event)" class="space-y-3 text-xs sm:text-sm">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Nome do Investimento / Projeto</label>
+                    <input type="text" id="inv-name" required placeholder="Ex: Expansão da Linha de Produção, Nova Filial, etc." class="w-full p-2.5 border border-slate-300 rounded-xl">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Valor do Aporte (R$)</label>
+                        <input type="number" step="0.01" id="inv-amount" required placeholder="Ex: 5000.00" class="w-full p-2.5 border border-slate-300 rounded-xl font-bold text-amber-600">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Custos Iniciais Extras (R$)</label>
+                        <input type="number" step="0.01" id="inv-cost" value="0" placeholder="Ex: 500.00" class="w-full p-2.5 border border-slate-300 rounded-xl text-rose-600">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Receita Esperada (R$)</label>
+                        <input type="number" step="0.01" id="inv-return" required placeholder="Ex: 8500.00" class="w-full p-2.5 border border-slate-300 rounded-xl text-emerald-600 font-bold">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Data Prevista</label>
+                        <input type="date" id="inv-date" required class="w-full p-2.5 border border-slate-300 rounded-xl">
+                    </div>
+                </div>
+                <p class="text-[11px] text-slate-500 italic bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                    💡 Ao criar o investimento, serão geradas automaticamente as <b>Contas a Pagar</b> (Aporte + Custos) e a <b>Conta a Receber</b> (Retorno previsto). Após quitar os custos e receber o valor, o <b>Lucro Líquido</b> será consolidado no balanço!
+                </p>
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="toggleInvestmentModal(false)" class="w-1/2 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-600">Cancelar</button>
+                    <button type="submit" class="w-1/2 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-md">Simular & Cadastrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-loan" class="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 hidden">
+        <div class="azulejo w-full max-w-md p-6 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-base">Solicitar / Registrar Empréstimo</h3>
+                <button onclick="toggleLoanModal(false)" class="text-slate-400 hover:text-slate-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="form-loan" onsubmit="handleSaveLoan(event)" class="space-y-3 text-xs sm:text-sm">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Instituição Credora</label>
+                    <input type="text" id="loan-lender" required placeholder="Ex: Banco Financeiro S.A." class="w-full p-2.5 border border-slate-300 rounded-xl">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Valor Solicitado (R$)</label>
+                    <input type="number" step="0.01" id="loan-amount" required placeholder="Ex: 5000.00" class="w-full p-2.5 border border-slate-300 rounded-xl font-bold text-brand-700">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Taxa de Juros Total (%)</label>
+                        <input type="number" step="0.1" id="loan-rate" value="10" required class="w-full p-2.5 border border-slate-300 rounded-xl">
+                    </div>
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Nº de Parcelas</label>
+                        <input type="number" id="loan-installments" value="6" min="1" required class="w-full p-2.5 border border-slate-300 rounded-xl">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Data de Contratação</label>
+                    <input type="date" id="loan-date" required class="w-full p-2.5 border border-slate-300 rounded-xl">
+                </div>
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="toggleLoanModal(false)" class="w-1/2 py-2.5 border border-slate-300 rounded-xl font-bold text-slate-600">Cancelar</button>
+                    <button type="submit" class="w-1/2 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-md">Contratar Empréstimo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        let state = {
+            currentRole: 'company',
+            activeCompanyId: null,
+            companies: [],
+            transactions: [],
+            loans: [],
+            investments: [],
+            purchasedItems: []
+        };
+
+        const MARKET_PRODUCTS = [
+            { id: 'p1', name: 'Máquina de Sorvete Profissional', category: 'Equipamentos', price: 12500.00, desc: 'Equipamento de alta produção para sorveterias e lanchonetes.' },
+            { id: 'p2', name: 'Freezer Vertical Comercial', category: 'Equipamentos', price: 4200.00, desc: 'Conservação de bebidas e gelados com excelente eficiência.' },
+            { id: 'p3', name: 'Prateleira de Aço Expositora (Kit)', category: 'Estrutura', price: 1500.00, desc: 'Módulos resistentes para organização e exposição de mercadorias.' },
+            { id: 'p4', name: 'Tinta Acrílica Premium (Lata 18L)', category: 'Estrutura', price: 350.00, desc: 'Renovação e pintura de paredes e fachadas comerciais.' },
+            { id: 'p5', name: 'Lote de Roupas e Vestuário', category: 'Mercadorias', price: 3000.00, desc: 'Variedade de peças da moda atual para revenda.' },
+            { id: 'p6', name: 'Lote de Calçados Diversos', category: 'Mercadorias', price: 2500.00, desc: 'Tênis e sapatos variados para estoque de loja.' },
+            { id: 'p7', name: 'Lote de Bebidas e Refrigerantes', category: 'Mercadorias', price: 1800.00, desc: 'Reposição rápida de bebidas para comércio.' }
+        ];
+
+        let currentMarketFilter = 'all';
+        let chartInstance = null;
+
+        const DEFAULT_STATE = {
+            currentRole: 'company',
+            activeCompanyId: 'comp_1',
+            companies: [
+                { id: 'comp_1', name: 'Alpha Inovações LTDA', segment: 'Tecnologia', initialCapital: 15000.00, createdAt: new Date().toISOString() },
+                { id: 'comp_2', name: 'Vanguard Comércio S.A.', segment: 'Varejo', initialCapital: 30000.00, createdAt: new Date().toISOString() }
+            ],
+            transactions: [
+                { id: 'tx_1', companyId: 'comp_1', type: 'income', description: 'Venda de Licença SaaS Corporativa', amount: 4500.00, category: 'Vendas', date: '2026-11-01', status: 'received' },
+                { id: 'tx_2', companyId: 'comp_1', type: 'expense', description: 'Aluguel do Coworking', amount: 1800.00, category: 'Aluguel', date: '2026-11-02', status: 'paid' },
+                { id: 'tx_3', companyId: 'comp_1', type: 'income', description: 'Consultoria de TI Aplicada', amount: 3200.00, category: 'Serviços', date: '2026-11-05', status: 'pending' },
+                { id: 'tx_4', companyId: 'comp_1', type: 'expense', description: 'Campanha de Marketing Digital', amount: 950.00, category: 'Marketing', date: '2026-11-06', status: 'pending' }
+            ],
+            loans: [
+                {
+                    id: 'loan_1',
+                    companyId: 'comp_1',
+                    lender: 'Banco Inova Brasil',
+                    amount: 10000.00,
+                    totalRepayable: 11500.00,
+                    outstanding: 11500.00,
+                    installmentsTotal: 10,
+                    installmentsPaid: 0,
+                    installmentAmount: 1150.00,
+                    date: '2026-10-15'
+                }
+            ],
+            investments: [
+                {
+                    id: 'inv_1',
+                    companyId: 'comp_1',
+                    name: 'Nova Plataforma Mobile',
+                    amount: 6000.00,
+                    cost: 800.00,
+                    return: 12000.00,
+                    date: '2026-11-03'
+                }
+            ],
+            purchasedItems: []
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadState();
+            initChart();
+            render();
+            lucide.createIcons();
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.querySelectorAll('input[type="date"]').forEach(inp => {
+                if (!inp.value) inp.value = today;
+            });
+        });
+
+        function loadState() {
+            const saved = localStorage.getItem('ADM_APP_STATE_V3');
+            if (saved) {
+                try { 
+                    state = JSON.parse(saved); 
+                    if (!state.purchasedItems) state.purchasedItems = [];
+                } catch(e) { state = DEFAULT_STATE; }
+            } else {
+                state = DEFAULT_STATE;
+                saveState();
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('ADM_APP_STATE_V3', JSON.stringify(state));
+        }
+
+        function resetData() {
+            if (confirm("Tem certeza que deseja resetar a simulação para os dados fictícios iniciais?")) {
+                localStorage.removeItem('ADM_APP_STATE_V3');
+                state = DEFAULT_STATE;
+                saveState();
+                render();
+            }
+        }
+
+        function openSidebar() {
+            document.getElementById('sidebar').classList.remove('-translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.remove('hidden');
+        }
+
+        function closeSidebar() {
+            document.getElementById('sidebar').classList.add('-translate-x-full');
+            document.getElementById('sidebar-backdrop').classList.add('hidden');
+        }
+
+        function nav(sectionId) {
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            const target = document.getElementById(`sec-${sectionId}`);
+            if (target) target.classList.remove('hidden');
+
+            document.querySelectorAll('nav button').forEach(btn => {
+                btn.classList.remove('bg-brand-900', 'text-white', 'font-semibold');
+                btn.classList.add('text-slate-300');
+            });
+            const activeBtn = document.getElementById(`nav-${sectionId}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-brand-900', 'text-white', 'font-semibold');
+                activeBtn.classList.remove('text-slate-300');
+            }
+
+            closeSidebar();
+            render();
+        }
+
+        function setRole(role) {
+            state.currentRole = role;
+            const btnCompany = document.getElementById('btn-role-company');
+            const btnGeneral = document.getElementById('btn-role-general');
+
+            if (role === 'company') {
+                btnCompany.className = "px-2 sm:px-3 py-1 rounded-lg text-xs font-semibold transition bg-white text-brand-700 shadow-sm";
+                btnGeneral.className = "px-2 sm:px-3 py-1 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900";
+            } else {
+                btnGeneral.className = "px-2 sm:px-3 py-1 rounded-lg text-xs font-semibold transition bg-white text-brand-700 shadow-sm";
+                btnCompany.className = "px-2 sm:px-3 py-1 rounded-lg text-xs font-semibold transition text-slate-600 hover:text-slate-900";
+            }
+
+            saveState();
+            render();
+        }
+
+        function changeActiveCompany(id) {
+            state.activeCompanyId = id;
+            saveState();
+            render();
+        }
+
+        function render() {
+            populateCompanySelector();
+            const company = state.companies.find(c => c.id === state.activeCompanyId) || state.companies[0];
+            if (!company) return;
+
+            renderDashboard(company);
+            renderCompaniesGrid();
+            renderMarketGrid();
+            renderIncomesTable();
+            renderExpensesTable();
+            renderInvestments();
+            renderPayablesReceivables();
+            renderLoans();
+            renderEquity(company);
+            renderReports(company);
+            renderAIBenchmark(company);
+
+            lucide.createIcons();
+        }
+
+        function populateCompanySelector() {
+            const selector = document.getElementById('company-selector');
+            selector.innerHTML = '';
+            state.companies.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                if (c.id === state.activeCompanyId) opt.selected = true;
+                selector.appendChild(opt);
+            });
+        }
+
+        function getCompanyMetrics(companyId) {
+            const company = state.companies.find(c => c.id === companyId);
+            const initialCapital = company ? company.initialCapital : 0;
+
+            const compTxs = state.transactions.filter(t => t.companyId === companyId);
+            const compLoans = state.loans.filter(l => l.companyId === companyId);
+
+            const receivedIncomes = compTxs.filter(t => t.type === 'income' && t.status === 'received').reduce((s, t) => s + t.amount, 0);
+            const pendingIncomes = compTxs.filter(t => t.type === 'income' && t.status === 'pending').reduce((s, t) => s + t.amount, 0);
+
+            const paidExpenses = compTxs.filter(t => t.type === 'expense' && t.status === 'paid').reduce((s, t) => s + t.amount, 0);
+            const pendingExpenses = compTxs.filter(t => t.type === 'expense' && t.status === 'pending').reduce((s, t) => s + t.amount, 0);
+
+            const totalLoanPrincipalReceived = compLoans.reduce((s, l) => s + l.amount, 0);
+            const totalLoanOutstanding = compLoans.reduce((s, l) => s + l.outstanding, 0);
+
+            const currentCash = initialCapital + receivedIncomes + totalLoanPrincipalReceived - paidExpenses;
+            const operatingResult = receivedIncomes - paidExpenses;
+
+            return {
+                initialCapital,
+                receivedIncomes,
+                pendingIncomes,
+                paidExpenses,
+                pendingExpenses,
+                totalLoanOutstanding,
+                currentCash,
+                operatingResult
+            };
+        }
+
+        function renderDashboard(company) {
+            const metrics = getCompanyMetrics(company.id);
+
+            document.getElementById('dash-balance').textContent = formatBRL(metrics.currentCash);
+            document.getElementById('dash-initial-capital').textContent = formatBRL(metrics.initialCapital);
+            document.getElementById('dash-incomes').textContent = formatBRL(metrics.receivedIncomes);
+            document.getElementById('dash-expenses').textContent = formatBRL(metrics.paidExpenses);
+            document.getElementById('dash-loans-due').textContent = formatBRL(metrics.totalLoanOutstanding);
+
+            updateChart(metrics.receivedIncomes, metrics.paidExpenses);
+
+            const recentList = document.getElementById('dash-recent-list');
+            recentList.innerHTML = '';
+            const txs = state.transactions.filter(t => t.companyId === company.id).slice(-4).reverse();
+
+            if (txs.length === 0) {
+                recentList.innerHTML = '<p class="text-xs text-slate-400 py-4 text-center">Nenhuma movimentação registrada.</p>';
+            } els            } else {
+                txs.forEach(t => {
+                    const isInc = t.type === 'income';
+                    const div = document.createElement('div');
+                    div.className = "flex items-center justify-between p-2.5 bg-slate-50 rounded-xl text-xs";
+                    div.innerHTML = `
+                        <div class="flex items-center gap-2.5">
+                            <div class="p-2 rounded-lg ${isInc ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                                <i data-lucide="${isInc ? 'arrow-up-right' : 'arrow-down-left'}" class="w-4 h-4"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-slate-800">${t.description}</p>
+                                <p class="text-[10px] text-slate-400">${t.date}</p>
+                            </div>
+                        </div>
+                        <span class="font-bold ${isInc ? 'text-emerald-600' : 'text-rose-600'}">
+                            ${isInc ? '+' : '-'} ${formatBRL(t.amount)}
+                        </span>
+                    `;
+                    recentList.appendChild(div);
+                });
+            }
+        }
+
+        function renderCompaniesGrid() {
+            const grid = document.getElementById('companies-grid');
+            grid.innerHTML = '';
+            state.companies.forEach(c => {
+                const metrics = getCompanyMetrics(c.id);
+                const isSelected = c.id === state.activeCompanyId;
+                const div = document.createElement('div');
+                div.className = `azulejo p-5 space-y-4 ${isSelected ? 'border-2 border-brand-500' : ''}`;
+                div.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-base">${c.name}</h4>
+                            <span class="text-xs px-2 py-0.5 rounded-md bg-slate-100 font-medium text-slate-600">${c.segment}</span>
+                        </div>
+                        ${isSelected ? '<span class="text-[10px] bg-brand-100 text-brand-800 font-bold px-2 py-1 rounded-full">Ativa</span>' : ''}
+                    </div>
+                    <div class="space-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                        <div class="flex justify-between">
+                            <span>Saldo em Caixa:</span>
+                            <span class="font-bold text-slate-900">${formatBRL(metrics.currentCash)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Capital Inicial:</span>
+                            <span>${formatBRL(c.initialCapital)}</span>
+                        </div>
+                    </div>
+                    <div class="pt-2">
+                        <button onclick="changeActiveCompany('${c.id}')" class="w-full py-2 bg-slate-100 hover:bg-brand-50 hover:text-brand-700 text-slate-700 rounded-xl text-xs font-bold transition">
+                            ${isSelected ? 'Empresa Selecionada' : 'Gerenciar Empresa'}
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function filterMarket(category) {
+            currentMarketFilter = category;
+            ['all', 'Equipamentos', 'Estrutura', 'Mercadorias'].forEach(cat => {
+                const btn = document.getElementById(`filter-market-${cat}`);
+                if (btn) {
+                    if (cat === category) {
+                        btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand-600 text-white transition";
+                    } else {
+                        btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 transition";
+                    }
+                }
+            });
+            renderMarketGrid();
+        }
+
+        function renderMarketGrid() {
+            const grid = document.getElementById('market-grid');
+            grid.innerHTML = '';
+
+            const filtered = currentMarketFilter === 'all' 
+                ? MARKET_PRODUCTS 
+                : MARKET_PRODUCTS.filter(p => p.category === currentMarketFilter);
+
+            filtered.forEach(p => {
+                const div = document.createElement('div');
+                div.className = "azulejo p-5 flex flex-col justify-between space-y-4";
+                div.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 bg-brand-50 text-brand-700 rounded-md">${p.category}</span>
+                        </div>
+                        <h4 class="font-bold text-slate-900 text-base">${p.name}</h4>
+                        <p class="text-xs text-slate-500 mt-1">${p.desc}</p>
+                    </div>
+                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] text-slate-400 block">Preço à Vista</span>
+                            <span class="font-extrabold text-brand-700 text-lg">${formatBRL(p.price)}</span>
+                        </div>
+                        <button onclick="openMarketBuyModal('${p.id}')" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold transition shadow-sm">
+                            Comprar / Financiar
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function toggleMarketModal(show) {
+            document.getElementById('modal-buy-market').classList.toggle('hidden', !show);
+        }
+
+        function openMarketBuyModal(prodId) {
+            const product = MARKET_PRODUCTS.find(p => p.id === prodId);
+            if (!product) return;
+
+            document.getElementById('buy-prod-id').value = product.id;
+            document.getElementById('market-modal-title').textContent = `Adquirir: ${product.name}`;
+            document.getElementById('buy-prod-price-view').textContent = formatBRL(product.price);
+            document.getElementById('buy-payment-mode').value = 'cash';
+            document.getElementById('installments-box').classList.add('hidden');
+            
+            toggleMarketModal(true);
+        }
+
+        function onPaymentModeChange(mode) {
+            const box = document.getElementById('installments-box');
+            if (mode === 'installments') {
+                box.classList.remove('hidden');
+            } else {
+                box.classList.add('hidden');
+            }
+        }
+
+        function handleConfirmMarketBuy(e) {
+            e.preventDefault();
+            const prodId = document.getElementById('buy-prod-id').value;
+            const product = MARKET_PRODUCTS.find(p => p.id === prodId);
+            const mode = document.getElementById('buy-payment-mode').value;
+            const date = document.getElementById('buy-date').value;
+
+            if (!product) return;
+
+            if (mode === 'cash') {
+                state.transactions.push({
+                    id: 'tx_market_' + Date.now(),
+                    companyId: state.activeCompanyId,
+                    type: 'expense',
+                    description: `Compra (Mercado): ${product.name}`,
+                    amount: product.price,
+                    category: product.category,
+                    date: date,
+                    status: 'paid'
+                });
+            } else {
+                const count = parseInt(document.getElementById('buy-installments-count').value) || 3;
+                const installmentValue = product.price / count;
+
+                for (let i = 1; i <= count; i++) {
+                    state.transactions.push({
+                        id: `tx_market_${Date.now()}_${i}`,
+                        companyId: state.activeCompanyId,
+                        type: 'expense',
+                        description: `Compra Parcelada (${i}/${count}): ${product.name}`,
+                        amount: installmentValue,
+                        category: product.category,
+                        date: date,
+                        status: i === 1 ? 'paid' : 'pending'
+                    });
+                }
+            }
+
+            state.purchasedItems.push({
+                id: 'item_' + Date.now(),
+                companyId: state.activeCompanyId,
+                name: product.name,
+                category: product.category,
+                price: product.price,
+                date: date
+            });
+
+            saveState();
+            toggleMarketModal(false);
+            render();
+            alert(`Aquisição de "${product.name}" realizada com sucesso!`);
+        }
+
+        function renderIncomesTable() {
+            const tbody = document.getElementById('incomes-table-body');
+            tbody.innerHTML = '';
+            const txs = state.transactions.filter(t => t.companyId === state.activeCompanyId && t.type === 'income');
+            if (txs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-xs text-slate-400">Nenhuma receita registrada.</td></tr>';
+                return;
+            }
+            txs.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition";
+                tr.innerHTML = `
+                    <td class="p-3 sm:p-4 font-semibold text-slate-800">${t.description}</td>
+                    <td class="p-3 sm:p-4 text-slate-600">${t.category}</td>
+                    <td class="p-3 sm:p-4 text-slate-500">${t.date}</td>
+                    <td class="p-3 sm:p-4 font-bold text-emerald-600">${formatBRL(t.amount)}</td>
+                    <td class="p-3 sm:p-4">
+                        <span class="px-2 py-1 text-[10px] font-bold rounded-lg ${t.status === 'received' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                            ${t.status === 'received' ? 'Recebido' : 'Pendente'}
+                        </span>
+                    </td>
+                    <td class="p-3 sm:p-4 text-right space-x-1">
+                        ${t.status === 'pending' ? `<button onclick="settleTx('${t.id}')" class="p-1 text-emerald-600 hover:bg-emerald-50 rounded" title="Confirmar Recebimento"><i data-lucide="check-circle" class="w-4 h-4"></i></button>` : ''}
+                        <button onclick="deleteTx('${t.id}')" class="p-1 text-rose-500 hover:bg-rose-50 rounded" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderExpensesTable() {
+            const tbody = document.getElementById('expenses-table-body');
+            tbody.innerHTML = '';
+            const txs = state.transactions.filter(t => t.companyId === state.activeCompanyId && t.type === 'expense');
+            if (txs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-xs text-slate-400">Nenhuma despesa registrada.</td></tr>';
+                return;
+            }
+            txs.forEach(t => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50/80 transition";
+                tr.innerHTML = `
+                    <td class="p-3 sm:p-4 font-semibold text-slate-800">${t.description}</td>
+                    <td class="p-3 sm:p-4 text-slate-600">${t.category}</td>
+                    <td class="p-3 sm:p-4 text-slate-500">${t.date}</td>
+                    <td class="p-3 sm:p-4 font-bold text-rose-600">${formatBRL(t.amount)}</td>
+                    <td class="p-3 sm:p-4">
+                        <span class="px-2 py-1 text-[10px] font-bold rounded-lg ${t.status === 'paid' ? 'bg-slate-100 text-slate-700' : 'bg-rose-100 text-rose-800'}">
+                            ${t.status === 'paid' ? 'Pago' : 'Pendente'}
+                        </span>
+                    </td>
+                    <td class="p-3 sm:p-4 text-right space-x-1">
+                        ${t.status === 'pending' ? `<button onclick="settleTx('${t.id}')" class="p-1 text-emerald-600 hover:bg-emerald-50 rounded" title="Efetuar Pagamento"><i data-lucide="check-circle" class="w-4 h-4"></i></button>` : ''}
+                        <button onclick="deleteTx('${t.id}')" class="p-1 text-rose-500 hover:bg-rose-50 rounded" title="Excluir"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderInvestments() {
+            const container = document.getElementById('investments-container');
+            container.innerHTML = '';
+            const invs = state.investments.filter(i => i.companyId === state.activeCompanyId);
+
+            if (invs.length === 0) {
+                container.innerHTML = '<div class="col-span-full azulejo p-8 text-center text-xs text-slate-400">Nenhum investimento cadastrado. Clique em "Novo Investimento" para começar.</div>';
+                return;
+            }
+
+            invs.forEach((inv, index) => {
+                const totalCost = inv.amount + inv.cost;
+                const netProfit = inv.return - totalCost;
+                const isProfitable = netProfit >= 0;
+
+                const div = document.createElement('div');
+                div.className = "azulejo p-5 space-y-4";
+                div.innerHTML = `
+                    <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-base">${inv.name}</h4>
+                            <span class="text-[10px] text-slate-400">Data do Projeto: ${inv.date}</span>
+                        </div>
+                        <span class="px-2.5 py-1 text-[10px] font-bold rounded-lg ${isProfitable ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                            ${isProfitable ? 'Lucrativo' : 'Prejuízo Previsto'}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <span class="text-slate-400 block">Aporte Inicial</span>
+                            <span class="font-bold text-amber-600">${formatBRL(inv.amount)}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block">Custos Extras</span>
+                            <span class="font-bold text-rose-600">${formatBRL(inv.cost)}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block">Receita Esperada</span>
+                            <span class="font-bold text-emerald-600">${formatBRL(inv.return)}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block">Lucro Líquido Estimado</span>
+                            <span class="font-bold ${isProfitable ? 'text-emerald-700' : 'text-rose-600'}">${formatBRL(netProfit)}</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <div class="h-40 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                            <canvas id="invChart_${index}"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="pt-1 flex justify-between items-center text-xs text-slate-500">
+                        <span>Status das Contas Vinculadas</span>
+                        <button onclick="deleteInvestment('${inv.id}')" class="text-rose-500 hover:underline font-semibold flex items-center gap-1">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Excluir Projeto
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+
+                setTimeout(() => {
+                    const ctx = document.getElementById(`invChart_${index}`).getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Total Investido/Custos', 'Receita Prevista', 'Lucro Líquido'],
+                            datasets: [{
+                                data: [totalCost, inv.return, netProfit],
+                                backgroundColor: ['#f43f5e', '#10b981', isProfitable ? '#3b82f6' : '#f59e0b'],
+                                borderRadius: 6
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+                }, 50);
+            });
+        }
+
+        function renderPayablesReceivables() {
+            const recList = document.getElementById('receivables-list');
+            const payList = document.getElementById('payables-list');
+            recList.innerHTML = '';
+            payList.innerHTML = '';
+
+            const txs = state.transactions.filter(t => t.companyId === state.activeCompanyId && t.status === 'pending');
+            const receivables = txs.filter(t => t.type === 'income');
+            const payables = txs.filter(t => t.type === 'expense');
+
+            document.getElementById('total-receivables').textContent = formatBRL(receivables.reduce((s, t) => s + t.amount, 0));
+            document.getElementById('total-payables').textContent = formatBRL(payables.reduce((s, t) => s + t.amount, 0));
+
+            if (receivables.length === 0) {
+                recList.innerHTML = '<p class="text-xs text-slate-400 py-4 text-center">Nenhum recebimento pendente.</p>';
+            } else {
+                receivables.forEach(t => {
+                    const div = document.createElement('div');
+                    div.className = "p-3 bg-emerald-50/50 border border-emerald-100 rounded-xl flex justify-between items-center text-xs";
+                    div.innerHTML = `
+                        <div>
+                            <p class="font-bold text-slate-800">${t.description}</p>
+                            <p class="text-[10px] text-slate-500">Vencimento: ${t.date}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-emerald-700">${formatBRL(t.amount)}</p>
+                            <button onclick="settleTx('${t.id}')" class="text-[10px] text-emerald-600 font-bold hover:underline">Confirmar Recebimento</button>
+                        </div>
+                    `;
+                    recList.appendChild(div);
+                });
+            }
+
+            if (payables.length === 0) {
+                payList.innerHTML = '<p class="text-xs text-slate-400 py-4 text-center">Nenhum pagamento pendente.</p>';
+            } else {
+                payables.forEach(t => {
+                    const div = document.createElement('div');
+                    div.className = "p-3 bg-rose-50/50 border border-rose-100 rounded-xl flex justify-between items-center text-xs";
+                    div.innerHTML = `
+                        <div>
+                            <p class="font-bold text-slate-800">${t.description}</p>
+                            <p class="text-[10px] text-slate-500">Vencimento: ${t.date}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-rose-700">${formatBRL(t.amount)}</p>
+                            <button onclick="settleTx('${t.id}')" class="text-[10px] text-rose-600 font-bold hover:underline">Dar Baixa (Pagar)</button>
+                        </div>
+                    `;
+                    payList.appendChild(div);
+                });
+            }
+        }
+
+        function renderLoans() {
+            const container = document.getElementById('loans-container');
+            container.innerHTML = '';
+            const loans = state.loans.filter(l => l.companyId === state.activeCompanyId);
+
+            if (loans.length === 0) {
+                container.innerHTML = '<div class="col-span-full azulejo p-8 text-center text-xs text-slate-400">Nenhum empréstimo ativado para esta empresa.</div>';
+                return;
+            }
+
+            loans.forEach(l => {
+                const div = document.createElement('div');
+                div.className = "azulejo p-5 space-y-4";
+                div.innerHTML = `
+                    <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-base">${l.lender}</h4>
+                            <span class="text-[10px] text-slate-400">Contratado em ${l.date}</span>
+                        </div>
+                        <span class="px-2 py-1 text-[10px] font-bold rounded-lg bg-amber-100 text-amber-800">Em Aberto</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div>
+                            <span class="text-slate-400 block">Valor Original</span>
+                            <span class="font-bold text-slate-800">${formatBRL(l.amount)}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block">Saldo Devedor</span>
+                            <span class="font-bold text-rose-600">${formatBRL(l.outstanding)}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block">Parcelas</span>
+                            <span class="font-semibold text-slate-700">${l.installmentsPaid} / ${l.installmentsTotal}</span>
+                        </div>
+                        <div>
+                            <span class="text-slate-400 block">Valor Parcela</span>
+                            <span class="font-semibold text-slate-700">${formatBRL(l.installmentAmount)}</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <button onclick="payLoanInstallment('${l.id}')" ${l.outstanding <= 0 ? 'disabled' : ''} class="w-full py-2 bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 text-white rounded-xl text-xs font-bold transition shadow-sm">
+                            Amortizar / Pagar Parcela (${formatBRL(l.installmentAmount)})
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderEquity(company) {
+            const metrics = getCompanyMetrics(company.id);
+
+            document.getElementById('bp-cash').textContent = formatBRL(metrics.currentCash);
+            document.getElementById('bp-receivables').textContent = formatBRL(metrics.pendingIncomes);
+            document.getElementById('bp-fixed-assets').textContent = formatBRL(0);
+
+            const totalAssets = metrics.currentCash + metrics.pendingIncomes;
+            document.getElementById('bp-total-assets').textContent = formatBRL(totalAssets);
+
+            document.getElementById('bp-payables').textContent = formatBRL(metrics.pendingExpenses);
+            document.getElementById('bp-loans').textContent = formatBRL(metrics.totalLoanOutstanding);
+            
+            document.getElementById('bp-capital').textContent = formatBRL(metrics.initialCapital);
+            document.getElementById('bp-retained-earnings').textContent = formatBRL(metrics.operatingResult);
+
+            const totalLiabilitiesEquity = metrics.pendingExpenses + metrics.totalLoanOutstanding + metrics.initialCapital + metrics.operatingResult;
+            document.getElementById('bp-total-liabilities-equity').textContent = formatBRL(totalLiabilitiesEquity);
+        }
+
+        function renderReports(company) {
+            const metrics = getCompanyMetrics(company.id);
+            document.getElementById('dre-company-name').textContent = company.name.toUpperCase();
+            document.getElementById('dre-gross-revenue').textContent = formatBRL(metrics.receivedIncomes);
+            document.getElementById('dre-operating-expenses').textContent = formatBRL(metrics.paidExpenses);
+
+            const opResultEl = document.getElementById('dre-operating-result');
+            opResultEl.textContent = formatBRL(metrics.operatingResult);
+            opResultEl.className = metrics.operatingResult >= 0 ? "text-emerald-600 font-extrabold" : "text-rose-600 font-extrabold";
+        }
+
+        function renderAIBenchmark(company) {
+            const metrics = getCompanyMetrics(company.id);
+            const badge = document.getElementById('insight-badge');
+            const text = document.getElementById('insight-text');
+
+            if (metrics.currentCash < 0) {
+                badge.className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800";
+                badge.textContent = "Alerta de Caixa Negativo";
+                text.textContent = "Sua empresa está com saldo de caixa negativo. Considere reduzir custos ou antecipar recebíveis.";
+            } else if (metrics.totalLoanOutstanding > metrics.initialCapital * 1.5) {
+                badge.className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800";
+                badge.textContent = "Alerta de Endividamento";
+                text.textContent = "O passivo bancário está elevado em relação ao capital. Recomenda-se amortizar parcelas.";
+            } else if (metrics.operatingResult > 0) {
+                badge.className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800";
+                badge.textContent = "Operação Lucrativa";
+                text.textContent = "Excelente! As receitas estão superando as despesas operacionais.";
+            } else {
+                badge.className = "px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700";
+                badge.textContent = "Operação Estável";
+                text.textContent = "Continue monitorando os vencimentos e lançamentos.";
+            }
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Receitas Efetivadas', 'Despesas Pagas'],
+                    datasets: [{
+                        label: 'Valores (R$)',
+                        data: [0, 0],
+                        backgroundColor: ['#10b981', '#f43f5e'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function updateChart(inc, exp) {
+            if (chartInstance) {
+                chartInstance.data.datasets[0].data = [inc, exp];
+                chartInstance.update();
+            }
+        }
+
+        function toggleCompanyModal(show) { document.getElementById('modal-company').classList.toggle('hidden', !show); }
+        function toggleIncomeModal(show) { document.getElementById('modal-income').classList.toggle('hidden', !show); }
+        function toggleExpenseModal(show) { document.getElementById('modal-expense').classList.toggle('hidden', !show); }
+        function toggleLoanModal(show) { document.getElementById('modal-loan').classList.toggle('hidden', !show); }
+        function toggleInvestmentModal(show) { document.getElementById('modal-investment').classList.toggle('hidden', !show); }
+
+        function handleSaveCompany(e) {
+            e.preventDefault();
+            const newComp = {
+                id: 'comp_' + Date.now(),
+                name: document.getElementById('comp-name').value,
+                segment: document.getElementById('comp-segment').value,
+                initialCapital: parseFloat(document.getElementById('comp-capital').value) || 0,
+                createdAt: new Date().toISOString()
+            };
+            state.companies.push(newComp);
+            state.activeCompanyId = newComp.id;
+            saveState();
+            toggleCompanyModal(false);
+            e.target.reset();
+            render();
+        }
+
+        function handleSaveIncome(e) {
+            e.preventDefault();
+            const tx = {
+                id: 'tx_' + Date.now(),
+                companyId: state.activeCompanyId,
+                type: 'income',
+                description: document.getElementById('inc-desc').value,
+                amount: parseFloat(document.getElementById('inc-amount').value) || 0,
+                category: document.getElementById('inc-category').value,
+                date: document.getElementById('inc-date').value,
+                status: document.getElementById('inc-status').value
+            };
+            state.transactions.push(tx);
+            saveState();
+            toggleIncomeModal(false);
+            e.target.reset();
+            render();
+        }
+
+        function handleSaveExpense(e) {
+            e.preventDefault();
+            const tx = {
+                id: 'tx_' + Date.now(),
+                companyId: state.activeCompanyId,
+                type: 'expense',
+                description: document.getElementById('exp-desc').value,
+                amount: parseFloat(document.getElementById('exp-amount').value) || 0,
+                category: document.getElementById('exp-category').value,
+                date: document.getElementById('exp-date').value,
+                status: document.getElementById('exp-status').value
+            };
+            state.transactions.push(tx);
+            saveState();
+            toggleExpenseModal(false);
+            e.target.reset();
+            render();
+        }
+
+        function handleSaveInvestment(e) {
+            e.preventDefault();
+            const name = document.getElementById('inv-name').value;
+            const amount = parseFloat(document.getElementById('inv-amount').value) || 0;
+            const cost = parseFloat(document.getElementById('inv-cost').value) || 0;
+            const returnVal = parseFloat(document.getElementById('inv-return').value) || 0;
+            const date = document.getElementById('inv-date').value;
+
+            const investment = {
+                id: 'inv_' + Date.now(),
+                companyId: state.activeCompanyId,
+                name,
+                amount,
+                cost,
+                return: returnVal,
+                date
+            };
+
+            state.investments.push(investment);
+
+            state.transactions.push({
+                id: 'tx_inv_aport_' + Date.now(),
+                companyId: state.activeCompanyId,
+                type: 'expense',
+                description: `Aporte: ${name}`,
+                amount: amount,
+                category: 'Investimentos',
+                date: date,
+                status: 'pending'
+            });
+
+            if (cost > 0) {
+                state.transactions.push({
+                    id: 'tx_inv_cost_' + Date.now(),
+                    companyId: state.activeCompanyId,
+                    type: 'expense',
+                    description: `Custos Extras: ${name}`,
+                    amount: cost,
+                    category: 'Investimentos',
+                    date: date,
+                    status: 'pending'
+                });
+            }
+
+            state.transactions.push({
+                id: 'tx_inv_ret_' + Date.now(),
+                companyId: state.activeCompanyId,
+                type: 'income',
+                description: `Retorno Esperado: ${name}`,
+                amount: returnVal,
+                category: 'Investimentos',
+                date: date,
+                status: 'pending'
+            });
+
+            saveState();
+            toggleInvestmentModal(false);
+            e.target.reset();
+            render();
+        }
+
+        function deleteInvestment(id) {
+            state.investments = state.investments.filter(i => i.id !== id);
+            saveState();
+            render();
+        }
+
+        function handleSaveLoan(e) {
+            e.preventDefault();
+            const amount = parseFloat(document.getElementById('loan-amount').value) || 0;
+            const rate = parseFloat(document.getElementById('loan-rate').value) || 0;
+            const installments = parseInt(document.getElementById('loan-installments').value) || 1;
+
+            const totalRepayable = amount * (1 + (rate / 100));
+            const installmentAmount = totalRepayable / installments;
+
+            const loan = {
+                id: 'loan_' + Date.now(),
+                companyId: state.activeCompanyId,
+                lender: document.getElementById('loan-lender').value,
+                amount: amount,
+                totalRepayable: totalRepayable,
+                outstanding: totalRepayable,
+                installmentsTotal: installments,
+                installmentsPaid: 0,
+                installmentAmount: installmentAmount,
+                date: document.getElementById('loan-date').value
+            };
+
+            state.loans.push(loan);
+            saveState();
+            toggleLoanModal(false);
+            e.target.reset();
+            render();
+        }
+
+        function settleTx(id) {
+            const tx = state.transactions.find(t => t.id === id);
+            if (tx) {
+                tx.status = tx.type === 'income' ? 'received' : 'paid';
+                saveState();
+                render();
+            }
+        }
+
+        function deleteTx(id) {
+            state.transactions = state.transactions.filter(t => t.id !== id);
+            saveState();
+            render();
+        }
+
+        function payLoanInstallment(loanId) {
+            const loan = state.loans.find(l => l.id === loanId);
+            if (loan && loan.outstanding > 0) {
+                const metrics = getCompanyMetrics(loan.companyId);
+                if (metrics.currentCash < loan.installmentAmount) {
+                    alert("Saldo em caixa insuficiente para pagar esta parcela de empréstimo.");
+                    return;
+                }
+
+                state.transactions.push({
+                    id: 'tx_' + Date.now(),
+                    companyId: loan.companyId,
+                    type: 'expense',
+                    description: `Parcela Empréstimo - ${loan.lender}`,
+                    amount: loan.installmentAmount,
+                    category: 'Outros',
+                    date: new Date().toISOString().split('T')[0],
+                    status: 'paid'
+                });
+
+                loan.outstanding = Math.max(0, loan.outstanding - loan.installmentAmount);
+                loan.installmentsPaid += 1;
+
+                saveState();
+                render();
+            }
+        }
+
+        function formatBRL(val) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
+        }
+    </script>
+</body>
+</html>
